@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Sinex OroVivo</string>
+    <string name="parametres">Paramètres</string>
+    <string name="inventaire">Inventaire</string>
+    <string name="bonjour">Bonjour</string>
+    <string name="saisie">Saisie</string>
+    <string name="consultation">Consultation</string>
+    <string name="selection_magasin">Veuillez scanner un code magasin.</string>
+    <string name="scan_qr_code">Scanner un QR code</string>
+</resources>
