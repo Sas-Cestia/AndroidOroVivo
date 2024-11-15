@@ -9,6 +9,9 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        flatDir {
+            dirs = setOf(file("${rootDir}/RFIDAPI3Library/libs"))
+        }
     }
 }
 plugins {
@@ -19,9 +22,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        flatDir {
+            dirs = setOf(file("${rootDir}/RFIDAPI3Library/libs"))
+        }
     }
 }
 
 rootProject.name = "Sinex"
 include(":app")
 include(":data")
+include(":RFIDAPI3Library")

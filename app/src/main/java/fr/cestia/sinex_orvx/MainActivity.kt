@@ -4,6 +4,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.WindowInsetsController
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.zebra.rfid.api3.InvalidUsageException
+import com.zebra.rfid.api3.OperationFailureException
+import com.zebra.rfid.api3.RFIDReader
 import dagger.hilt.android.AndroidEntryPoint
 import fr.cestia.data.dao.MainDao
 import fr.cestia.sinex_orvx.ui.theme.SinexTheme
@@ -18,6 +22,9 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private var rfidReader: RFIDReader? = null
+    private val rfidReaderName = "RFD4031"
 
     @Inject
     lateinit var mainDao: MainDao
@@ -37,7 +44,23 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        initializeRFIDReader()
         setupImmersiveMode()
+    }
+
+    private fun initializeRFIDReader() {
+        try {
+            // Connexion au lecteur RFID avec les bons paramètres
+            rfidReader = RFIDReader(rfidReaderName, 0, 0, "COM_PORT", "RFD4031")
+            rfidReader?.connect()
+
+        } catch (e: OperationFailureException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Erreur de connexion au lecteur RFID", Toast.LENGTH_LONG).show()
+        } catch (e: InvalidUsageException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Erreur de connexion au lecteur RFID", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun setupImmersiveMode() {

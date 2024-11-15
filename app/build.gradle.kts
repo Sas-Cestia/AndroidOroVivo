@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.retrofit)
     implementation(project(":data"))
+    implementation(project(":RFIDAPI3Library", configuration = "default"))
 
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.dagger.compiler)
