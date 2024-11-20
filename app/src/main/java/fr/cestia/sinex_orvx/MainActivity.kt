@@ -11,33 +11,38 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import fr.cestia.data.dao.MainDao
-import fr.cestia.sinex_orvx.ui.theme.SinexTheme
-import javax.inject.Inject
+import fr.cestia.common_files.ui.theme.SinexTheme
+import fr.cestia.sinex_orvx.viewmodel.AppInitializationViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var mainDao: MainDao
+    lateinit var mainApplication: MainApplication
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            mainApplication = application as MainApplication
+            val appInitializationViewModel: AppInitializationViewModel = hiltViewModel()
             SinexTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val mainApplication = MainApplication()
-                    mainApplication.App(mainDao)
+                    mainApplication.App(appInitializationViewModel)
                     mainApplication.ScreenSizeInfo()
                 }
             }
         }
         setupImmersiveMode()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mainApplication.endApp()
     }
 
     private fun setupImmersiveMode() {

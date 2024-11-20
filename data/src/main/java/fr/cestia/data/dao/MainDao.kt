@@ -6,12 +6,12 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import fr.cestia.data.model.inventaire.InventaireEnCours
-import fr.cestia.data.model.inventaire.Saisie
-import fr.cestia.data.model.inventaire.StockInitial
-import fr.cestia.data.model.parametres_generaux.ParametresGeneraux
-import fr.cestia.data.model.produit.Famille
-import fr.cestia.data.model.produit.Matiere
+import fr.cestia.data.models.inventaire.InventaireEnCours
+import fr.cestia.data.models.inventaire.Saisie
+import fr.cestia.data.models.inventaire.StockInitial
+import fr.cestia.data.models.parametres_generaux.ParametresGeneraux
+import fr.cestia.data.models.produit.Famille
+import fr.cestia.data.models.produit.Matiere
 
 @Dao
 interface MainDao {

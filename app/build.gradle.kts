@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "fr.cestia.sinex_orvx"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "fr.cestia.sinex_orvx"
@@ -59,6 +59,7 @@ tasks.withType<JavaCompile> {
 dependencies {
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.activity.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -74,7 +75,9 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.material3)
     implementation(libs.retrofit)
+    implementation(project(":common_files"))
     implementation(project(":data"))
+    implementation(project(":msaisie_inventaire"))
 
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.dagger.compiler)

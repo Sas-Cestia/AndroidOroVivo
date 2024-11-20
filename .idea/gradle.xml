@@ -11,7 +11,9 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/common_files" />
             <option value="$PROJECT_DIR$/data" />
+            <option value="$PROJECT_DIR$/msaisie_inventaire" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

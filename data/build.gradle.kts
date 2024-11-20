@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "fr.cestia.data"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 30
@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.kxml2)
     implementation(libs.logging.interceptor)
     implementation(libs.retrofit)
+    implementation(project(":common_files"))
 
     ksp(libs.androidx.room.compiler)
     ksp(libs.dagger.compiler)

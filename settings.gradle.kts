@@ -25,3 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "Sinex"
 include(":app")
 include(":data")
+include(":msaisie_inventaire")
+include(":common_files")

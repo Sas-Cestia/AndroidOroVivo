@@ -23,10 +23,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import fr.cestia.sinex_orvx.R
-import fr.cestia.sinex_orvx.component.BaseTopAppBar
-import fr.cestia.sinex_orvx.component.ExitButton
-import fr.cestia.sinex_orvx.ui.theme.Typography
+import fr.cestia.common_files.R
+import fr.cestia.common_files.components.BaseTopAppBar
+import fr.cestia.common_files.components.ExitButton
+import fr.cestia.common_files.tools.exitApplication
+import fr.cestia.common_files.ui.theme.Typography
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,8 +37,9 @@ fun AccueilScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val context = LocalContext.current
+//    val viewModel: AccueilViewModel = hiltViewModel<>()
 
-    BaseScreen(
+    fr.cestia.common_files.screens.BaseScreen(
         topBar = { BaseTopAppBar() },
         snackbarHostState = snackbarHostState,
         verticalArrangement = Arrangement.SpaceBetween,
@@ -51,7 +53,7 @@ fun AccueilScreen(
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
-                    onClick = { /*navController.navigate("saisieInventaire")*/ },
+                    onClick = { navController.navigate("saisieInventaire") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 78.dp)
@@ -87,6 +89,24 @@ fun AccueilScreen(
                         contentDescription = stringResource(R.string.inventaire)
                     )
                 }
+
+//                Button(
+//                    onClick = { viewModel.restartDataWedge },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .heightIn(min = 78.dp)
+//                ) {
+//                    Text(
+//                        stringResource(R.string.consultation) + " " + stringResource(R.string.inventaire),
+//                        style = Typography.titleLarge,
+//                        modifier = Modifier
+//                            .weight(1f)
+//                    )
+//                    Icon(
+//                        painter = painterResource(R.drawable.baseline_arrow_forward_ios_24),
+//                        contentDescription = stringResource(R.string.inventaire)
+//                    )
+//                }
             }
         }
 
@@ -94,7 +114,7 @@ fun AccueilScreen(
             Column(
                 verticalArrangement = Arrangement.Bottom
             ) {
-                ExitButton(context)
+                ExitButton { exitApplication(context) }
             }
         }
     }

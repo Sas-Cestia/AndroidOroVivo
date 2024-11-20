@@ -17,14 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -36,15 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import fr.cestia.sinex_orvx.R
-import fr.cestia.sinex_orvx.viewmodel.SelectionMagasinViewModel
-import fr.cestia.sinex_orvx.component.BaseTopAppBar
-import fr.cestia.sinex_orvx.component.ErrorSnackBar
-import fr.cestia.sinex_orvx.component.ExitButton
+import fr.cestia.common_files.R
+import fr.cestia.common_files.components.BaseTopAppBar
+import fr.cestia.common_files.components.ExitButton
+import fr.cestia.common_files.tools.exitApplication
+import fr.cestia.common_files.tools.scan.ScanSoundManager
 import fr.cestia.sinex_orvx.state.SelectionMagasinState
-import fr.cestia.sinex_orvx.ui.theme.Typography
-import fr.cestia.sinex_orvx.util.ScanSoundManager
-import fr.cestia.sinex_orvx.util.hideKeyboard
+import fr.cestia.sinex_orvx.viewmodel.SelectionMagasinViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,46 +59,31 @@ fun SelectionMagasinScreen(
         SelectionMagasinState.Initial
     )
     val errorMessage by viewModel.errorMessage.observeAsState("")
-    var scannedCode by rememberSaveable { mutableStateOf("") }
+    val scannedCode by viewModel.scannedCode.observeAsState("")
 
-    BaseScreen(
+//    LaunchedEffect(Unit) {
+//        viewModel.scannerManager.registerReceiver()
+//    }
+
+    LaunchedEffect(scannedCode) {
+        val currentCode = scannedCode
+        if (!currentCode.isNullOrEmpty()) {
+            viewModel.handleQrCodeScan(currentCode)
+        }
+    }
+
+    fr.cestia.common_files.screens.BaseScreen(
         topBar = { BaseTopAppBar() },
         snackbarHostState = snackbarHostState,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-//        DisposableEffect(Unit) {
-//            // Enregistrer le BroadcastReceiver quand le composable est affiché
-//            Log.d("SelectionMagasinScreen", "Enregistrement du ScanReceiver")
-//            val selectionMagScanReceiver = ScanReceiver { scannedData ->
-//                // Action au scan d'un code
-//                scope.launch {
-//                    viewModel.handleQrCodeScan(scannedData)
-//                    if (errorMessage.isNotBlank()) {
-//                        scope.launch {
-//                            errorSnackBarHostState.showSnackbar(
-//                                errorMessage,
-//                                duration = SnackbarDuration.Indefinite,
-//                                withDismissAction = true
-//                            )
-//                        }
-//                    } else {
-//                        scanSoundManager.playSuccessSound()
-//                    }
-//                }
-//            }
-//            val filter = IntentFilter("fr.cestia.BARCODE_SCAN")
-//            context.registerReceiver(selectionMagScanReceiver, filter)
-//
-//            // Désenregistrer le BroadcastReceiver quand le composable est détruit
-//            onDispose {
-//                Log.d("InventaireSuccessScreen", "Unregistering receiver")
-//                context.unregisterReceiver(selectionMagScanReceiver)
-//            }
-//        }
 
         LaunchedEffect(selectionMagasinState) {
             if (selectionMagasinState is SelectionMagasinState.Success) {
-                navController.navigate("accueil")
+                navController.navigate("accueil") {
+                    // Clear backstack pour éviter de retourner à l'écran de chargement
+                    popUpTo("selectionMagasin") { inclusive = true }
+                }
             }
         }
 
@@ -112,11 +91,6 @@ fun SelectionMagasinScreen(
             if (errorMessage.isNotEmpty()) {
                 snackbarHostState.showSnackbar(errorMessage)
             }
-        }
-
-        LaunchedEffect(Unit) {
-            focusManager.moveFocus(FocusDirection.Down)
-            hideKeyboard(context)
         }
 
         Column {
@@ -133,14 +107,19 @@ fun SelectionMagasinScreen(
                     Text(
                         stringResource(R.string.bonjour) + ".\n" +
                                 stringResource(R.string.selection_magasin),
-                        style = Typography.titleMedium
+                        style = fr.cestia.common_files.ui.theme.Typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     TextField(
-                        value = scannedCode,
-                        onValueChange = { scannedCode = it },
+                        value = scannedCode.orEmpty(),
+                        onValueChange = { newValue ->
+
+                            // Mettre à jour scannedCode si nécessaire via le ViewModel
+                            viewModel.updateScannedCode(newValue)
+
+                        },
                         singleLine = true,
                         label = {
                             Box(
@@ -151,7 +130,7 @@ fun SelectionMagasinScreen(
                                 Text(
                                     stringResource(R.string.scan_qr_code),
                                     modifier = Modifier.align(Alignment.Center),
-                                    style = Typography.labelMedium
+                                    style = fr.cestia.common_files.ui.theme.Typography.labelMedium
                                 )
                             }
                         },
@@ -163,13 +142,16 @@ fun SelectionMagasinScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 keyboardController?.hide()
+                                val currentCode = scannedCode
                                 scope.launch {
-                                    viewModel.handleQrCodeScan(scannedCode)
+                                    if (!currentCode.isNullOrEmpty()) {
+                                        viewModel.handleQrCodeScan(currentCode)
+                                    }
                                 }
 
                             }
                         ),
-                        textStyle = Typography.titleLarge,
+                        textStyle = fr.cestia.common_files.ui.theme.Typography.titleLarge,
                         modifier = Modifier
                             .fillMaxWidth()
                     )
@@ -177,17 +159,20 @@ fun SelectionMagasinScreen(
 
                 Box()
                 {
-                    ErrorSnackBar(errorSnackBarHostState, Modifier.align(Alignment.BottomCenter))
+                    fr.cestia.common_files.components.ErrorSnackBar(
+                        errorSnackBarHostState,
+                        Modifier.align(Alignment.BottomCenter)
+                    )
                 }
             }
 
-            Row (
+            Row(
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Column(
                     verticalArrangement = Arrangement.Bottom
                 ) {
-                    ExitButton(context)
+                    ExitButton { exitApplication(context) }
                 }
             }
         }

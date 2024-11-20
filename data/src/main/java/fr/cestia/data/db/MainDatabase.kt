@@ -5,12 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import fr.cestia.data.dao.MainDao
-import fr.cestia.data.model.inventaire.InventaireEnCours
-import fr.cestia.data.model.inventaire.Saisie
-import fr.cestia.data.model.inventaire.StockInitial
-import fr.cestia.data.model.parametres_generaux.ParametresGeneraux
-import fr.cestia.data.model.produit.Famille
-import fr.cestia.data.model.produit.Matiere
+import fr.cestia.data.models.inventaire.InventaireEnCours
+import fr.cestia.data.models.inventaire.Saisie
+import fr.cestia.data.models.inventaire.StockInitial
+import fr.cestia.data.models.parametres_generaux.ParametresGeneraux
+import fr.cestia.data.models.produit.Famille
+import fr.cestia.data.models.produit.Matiere
 
 @Database(
     entities = [
