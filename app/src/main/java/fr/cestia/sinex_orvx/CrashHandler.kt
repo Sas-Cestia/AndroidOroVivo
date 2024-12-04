@@ -19,7 +19,7 @@ class CrashHandler @Inject constructor(
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
         // Log de l'exception
-        Log.e("CrashHandler", "Uncaught exception: $throwable")
+        Log.e("CrashHandler", "Uncaught exception", throwable)
 
         // Nettoyage des ressources critiques (exemple)
         cleanUpResources()

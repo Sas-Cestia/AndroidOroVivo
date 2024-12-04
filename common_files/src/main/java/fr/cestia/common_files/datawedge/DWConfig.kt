@@ -61,7 +61,7 @@ class DWConfig @Inject constructor(
         putString("rfid_input_enabled", "true")
         putString("rfid_beeper_enable", "true")
         putString("rfid_led_enable", "true")
-        putString("rfid_antenna_transmit_power", "30")
+        putString("rfid_antenna_transmit_power", "27")
         putString("rfid_memory_bank", "0")
         putString("rfid_session", "1")
         putString("rfid_hardware_trigger_enabled", "true")
@@ -127,12 +127,13 @@ class DWConfig @Inject constructor(
             setAppList()
             setPluginConfig(setConfigBundle)
             sendConfig(setConfigBundle)
-            Log.d("DWConfig", "DataWedge initialized successfully")
+            Log.d("DWConfig", "Datawedge a été initialisé avec succès")
             return true
 
         } catch (e: Exception) {
 
-            Log.e("DWConfig", "Error initializing DataWedge", e)
+            Log.e("DWConfig", "Erreur lors de l'initialisation de DataWedge", e)
+            throw Exception("Erreur lors de l'initialisation de DataWedge", e)
             return false
 
         }

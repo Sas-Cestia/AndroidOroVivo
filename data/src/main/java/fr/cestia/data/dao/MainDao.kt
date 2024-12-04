@@ -56,9 +56,6 @@ interface MainDao {
     @Query("SELECT * FROM mproduit_matiere WHERE code = :code")
     suspend fun getMatiereByCode(code: String): Matiere?
 
-    @Query("SELECT * FROM mproduit_matiere")
-    suspend fun getAllMatieres(): List<Matiere>
-
     @Update
     suspend fun updateMatiere(matiere: Matiere)
 
@@ -84,9 +81,6 @@ interface MainDao {
 
     @Query("SELECT * FROM mproduit_famille WHERE code = :code")
     suspend fun getFamilleByCode(code: String): Famille?
-
-    @Query("SELECT * FROM mproduit_famille")
-    suspend fun getAllFamilles(): List<Famille>
 
     @Update
     suspend fun updateFamille(famille: Famille)

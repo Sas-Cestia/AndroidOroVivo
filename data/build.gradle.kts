@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.converter.scalars)
     implementation(libs.hilt.android)
+    implementation(libs.jsoup.jsoup)
     implementation(libs.kxml2)
     implementation(libs.logging.interceptor)
     implementation(libs.retrofit)

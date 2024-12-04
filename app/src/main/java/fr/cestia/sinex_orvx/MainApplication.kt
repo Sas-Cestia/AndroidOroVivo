@@ -80,18 +80,30 @@ class MainApplication : Application(), CoroutineScope {
         val state by appInitializationViewModel.state.collectAsState()
 
         LaunchedEffect(state) {
-
-            if (state.isDatabaseInitialized) {
-                if (state.isExistingInventaire) {
-                    navController.navigate("accueil") {
-                        // Clear backstack pour éviter de retourner à l'écran de chargement
-                        popUpTo("loading") { inclusive = true }
-                    }
-                } else {
-                    navController.navigate("selectionMagasin") {
-                        // Clear backstack pour éviter de retourner à l'écran de chargement
-                        popUpTo("loading") { inclusive = true }
-                    }
+            Log.d("NavigationDebug", "État actuel : $state")
+            if (
+                state.isExistingInventaire &&
+                state.isMatieresFamillesLoaded &&
+                state.isDatawedgeInitialized
+            ) {
+                navController.navigate("accueil") {
+                    // Clear backstack pour éviter de retourner à l'écran de chargement
+                    popUpTo("loading") { inclusive = true }
+                }
+            } else if (state.isMatieresFamillesLoaded && state.isDatawedgeInitialized) {
+                navController.navigate("selectionMagasin") {
+                    // Clear backstack pour éviter de retourner à l'écran de chargement
+                    popUpTo("loading") { inclusive = true }
+                }
+            } else if (state.errorMessage != null) {
+                navController.navigate("error/${state.errorMessage}/${state.actionOnRetry}") {
+                    // Clear backstack pour éviter de retourner à l'écran de chargement
+                    popUpTo("loading") { inclusive = true }
+                }
+            } else {
+                navController.navigate("loading") {
+                    // Clear backstack pour éviter de retourner à l'écran de chargement
+                    popUpTo("loading") { inclusive = true }
                 }
             }
         }

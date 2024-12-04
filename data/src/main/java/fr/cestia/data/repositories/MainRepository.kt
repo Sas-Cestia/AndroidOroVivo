@@ -7,7 +7,9 @@ import fr.cestia.data.models.inventaire.StockInitial
 import fr.cestia.data.models.parametres_generaux.ParametresGeneraux
 import fr.cestia.data.models.produit.Famille
 import fr.cestia.data.models.produit.Matiere
+import javax.inject.Singleton
 
+@Singleton
 class MainRepository(private val dao: MainDao) {
 
     // ** Fonctions pour les paramètres généraux **
@@ -47,10 +49,6 @@ class MainRepository(private val dao: MainDao) {
             throw IllegalArgumentException("Longueur de code de matière non valide")
         }
         dao.insertMatieres(matieres)
-    }
-
-    suspend fun getAllMatieres(): List<Matiere> {
-        return dao.getAllMatieres()
     }
 
     suspend fun getMatiereByCode(code: String): Matiere? {
@@ -102,10 +100,6 @@ class MainRepository(private val dao: MainDao) {
             throw IllegalArgumentException("Longueur de code de famille non valide")
         }
         dao.insertFamilles(familles)
-    }
-
-    suspend fun getAllFamilles(): List<Famille> {
-        return dao.getAllFamilles()
     }
 
     suspend fun getFamilleByCode(code: String): Famille? {
