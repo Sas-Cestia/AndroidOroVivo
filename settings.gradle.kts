@@ -22,8 +22,9 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Sinex"
+rootProject.name = "SinexORV"
 include(":app")
 include(":data")
 include(":msaisie_inventaire")
 include(":common_files")
+include(":RFIDAPI3Library")

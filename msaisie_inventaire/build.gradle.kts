@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(project(":common_files"))
     implementation(project(":data"))
+    implementation(project(":RFIDAPI3Library"))
 
     ksp(libs.androidx.room.compiler)
     ksp(libs.dagger.compiler)

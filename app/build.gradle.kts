@@ -78,6 +78,7 @@ dependencies {
     implementation(project(":common_files"))
     implementation(project(":data"))
     implementation(project(":msaisie_inventaire"))
+    implementation(project(":RFIDAPI3Library"))
 
     ksp(libs.androidx.hilt.compiler)
     ksp(libs.dagger.compiler)
