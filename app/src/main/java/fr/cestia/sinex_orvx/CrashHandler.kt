@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Process
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
-import fr.cestia.common_files.datawedge.DWConfig
 import fr.cestia.common_files.datawedge.ScannerManager
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -14,7 +13,6 @@ import kotlin.system.exitProcess
 class CrashHandler @Inject constructor(
     @ApplicationContext private val context: Context,
     private val scannerManager: ScannerManager,
-    private val dwConfig: DWConfig
 ) : Thread.UncaughtExceptionHandler {
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
@@ -34,6 +32,5 @@ class CrashHandler @Inject constructor(
         scannerManager.unregisterReceiver()
         Log.d("CrashHandler", "Resources cleaned up")
 
-        dwConfig.disableDatawedgeConfig()
     }
 }

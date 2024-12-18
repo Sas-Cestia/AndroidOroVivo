@@ -48,6 +48,7 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.material3)
     implementation(libs.retrofit)
+    implementation(project(":RFIDAPI3Library"))
 
     ksp(libs.dagger.compiler)
     ksp(libs.hilt.compiler)

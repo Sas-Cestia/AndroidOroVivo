@@ -103,26 +103,25 @@ class AppInitializationViewModel @Inject constructor(
         )
     }
 
-    fun loadMatieresFamilles(): Boolean {
-        try {
-            viewModelScope.launch {
+    fun loadMatieresFamilles() {
+        viewModelScope.launch {
+            try {
                 val data = produitRepository.getMatieresFamilles()
                 _matieresFamilles.value = data
+
+            } catch (e: Exception) {
+                val errorMessage =
+                    e.message
+                        ?: "Erreur inconnue lors du chargement des matières et familles stockées localement."
+
+                Log.e("AppInitialization", errorMessage, e)
+
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    errorMessage = errorMessage,
+                    actionOnRetry = "retryInitialization"
+                )
             }
-            return true
-        } catch (e: Exception) {
-            val errorMessage =
-                e.message
-                    ?: "Erreur inconnue lors du chargement des matières et familles stockées localement."
-
-            Log.e("AppInitialization", errorMessage, e)
-
-            _state.value = _state.value.copy(
-                isLoading = false,
-                errorMessage = errorMessage,
-                actionOnRetry = "retryInitialization"
-            )
-            return false
         }
     }
 

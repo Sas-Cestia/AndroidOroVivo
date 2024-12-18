@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.qualifiers.ApplicationContext
-import fr.cestia.common_files.datawedge.DWConfig.Companion.DATAWEDGE_INTENT_ACTION
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,7 +21,7 @@ class ScannerManager @Inject constructor(
     val scannedData: LiveData<String> = _scannedData
     private val scanReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == DATAWEDGE_INTENT_ACTION) {
+            if (intent.action == "${context.packageName}.ACTION") {
                 val scanData = intent.getStringExtra("com.symbol.datawedge.data_string")
                 Log.d("ScannerManager", "Scanned data:\n$scanData")
                 if (!scanData.isNullOrEmpty()) {
@@ -38,7 +37,7 @@ class ScannerManager @Inject constructor(
     fun registerReceiver() {
         if (isReceiverRegistered) return // Déjà enregistré
         resetScannedData()
-        val filter = IntentFilter(DATAWEDGE_INTENT_ACTION)
+        val filter = IntentFilter("${context.packageName}.ACTION")
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.registerReceiver(scanReceiver, filter, Context.RECEIVER_NOT_EXPORTED)

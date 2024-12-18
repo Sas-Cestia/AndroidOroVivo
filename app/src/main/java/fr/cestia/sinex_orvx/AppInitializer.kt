@@ -1,6 +1,7 @@
 package fr.cestia.sinex_orvx
 
-import fr.cestia.common_files.datawedge.DWConfig
+import android.util.Log
+import fr.cestia.common_files.barcode.DWManager
 import fr.cestia.data.dao.MainDao
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -8,11 +9,18 @@ import javax.inject.Singleton
 @Singleton
 class AppInitializer @Inject constructor(
     private val mainDao: MainDao,
-    private val dwConfig: DWConfig
+    private val dwManager: DWManager
 ) {
 
     fun initializeDataWedge(): Boolean {
-        return dwConfig.initialize()
+        try {
+            dwManager.configure()
+            dwManager.registerDWReceiver()
+            return true
+        } catch (e: Exception) {
+            Log.e("AppInitializer", "Erreur lors de la configuration de DataWedge", e)
+            return false
+        }
     }
 
     suspend fun hasExistingInventaire(): Boolean {

@@ -34,9 +34,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import fr.cestia.common_files.R
 import fr.cestia.common_files.components.BaseTopAppBar
+import fr.cestia.common_files.components.ErrorSnackBar
 import fr.cestia.common_files.components.ExitButton
+import fr.cestia.common_files.screens.BaseScreen
 import fr.cestia.common_files.tools.exitApplication
 import fr.cestia.common_files.tools.scan.ScanSoundManager
+import fr.cestia.common_files.ui.theme.Typography
 import fr.cestia.sinex_orvx.state.SelectionMagasinState
 import fr.cestia.sinex_orvx.viewmodel.SelectionMagasinViewModel
 import kotlinx.coroutines.launch
@@ -59,20 +62,18 @@ fun SelectionMagasinScreen(
         SelectionMagasinState.Initial
     )
     val errorMessage by viewModel.errorMessage.observeAsState("")
-    val scannedCode by viewModel.scannedCode.observeAsState("")
+    val enteredCode by viewModel.enteredCode.observeAsState("")
 
-//    LaunchedEffect(Unit) {
-//        viewModel.scannerManager.registerReceiver()
-//    }
-
-    LaunchedEffect(scannedCode) {
-        val currentCode = scannedCode
-        if (!currentCode.isNullOrEmpty()) {
-            viewModel.handleQrCodeScan(currentCode)
+    LaunchedEffect(enteredCode) {
+        val currentCode = enteredCode
+        if (currentCode.isNotEmpty()) {
+            scope.launch {
+                viewModel.handleQrCodeScan(currentCode)
+            }
         }
     }
 
-    fr.cestia.common_files.screens.BaseScreen(
+    BaseScreen(
         topBar = { BaseTopAppBar() },
         snackbarHostState = snackbarHostState,
         verticalArrangement = Arrangement.SpaceBetween,
@@ -107,17 +108,19 @@ fun SelectionMagasinScreen(
                     Text(
                         stringResource(R.string.bonjour) + ".\n" +
                                 stringResource(R.string.selection_magasin),
-                        style = fr.cestia.common_files.ui.theme.Typography.titleMedium
+                        style = Typography.titleMedium
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
 
                     TextField(
-                        value = scannedCode.orEmpty(),
+                        value = enteredCode,
                         onValueChange = { newValue ->
 
                             // Mettre à jour scannedCode si nécessaire via le ViewModel
-                            viewModel.updateScannedCode(newValue)
+                            scope.launch {
+                                viewModel.updateScannedCode(newValue)
+                            }
 
                         },
                         singleLine = true,
@@ -130,7 +133,7 @@ fun SelectionMagasinScreen(
                                 Text(
                                     stringResource(R.string.scan_qr_code),
                                     modifier = Modifier.align(Alignment.Center),
-                                    style = fr.cestia.common_files.ui.theme.Typography.labelMedium
+                                    style = Typography.labelMedium
                                 )
                             }
                         },
@@ -142,16 +145,16 @@ fun SelectionMagasinScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 keyboardController?.hide()
-                                val currentCode = scannedCode
+                                val currentCode = enteredCode
                                 scope.launch {
-                                    if (!currentCode.isNullOrEmpty()) {
+                                    if (currentCode.isNotEmpty()) {
                                         viewModel.handleQrCodeScan(currentCode)
                                     }
                                 }
 
                             }
                         ),
-                        textStyle = fr.cestia.common_files.ui.theme.Typography.titleLarge,
+                        textStyle = Typography.titleLarge,
                         modifier = Modifier
                             .fillMaxWidth()
                     )
@@ -159,7 +162,7 @@ fun SelectionMagasinScreen(
 
                 Box()
                 {
-                    fr.cestia.common_files.components.ErrorSnackBar(
+                    ErrorSnackBar(
                         errorSnackBarHostState,
                         Modifier.align(Alignment.BottomCenter)
                     )

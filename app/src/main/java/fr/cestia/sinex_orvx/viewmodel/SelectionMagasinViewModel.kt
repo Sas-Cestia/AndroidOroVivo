@@ -3,19 +3,20 @@ package fr.cestia.sinex_orvx.viewmodel
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import fr.cestia.common_files.datawedge.ScannerManager
+import fr.cestia.common_files.barcode.DWManager
 import fr.cestia.data.dao.MainDao
 import fr.cestia.data.models.inventaire.InventaireEnCours
 import fr.cestia.sinex_orvx.state.SelectionMagasinState
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SelectionMagasinViewModel @Inject constructor(
     private val mainDao: MainDao,
-    val scannerManager: ScannerManager
+    private val dwManager: DWManager,
 ) : ViewModel() {
     private val _selectionMagasinState =
         MutableLiveData<SelectionMagasinState>(SelectionMagasinState.Initial)
@@ -24,33 +25,22 @@ class SelectionMagasinViewModel @Inject constructor(
     private val _errorMessage = MutableLiveData("")
     val errorMessage: LiveData<String> = _errorMessage
 
-    private val _scannedCode = MutableLiveData<String?>()
-    val scannedCode: LiveData<String?> = _scannedCode
+    val scannedCode = dwManager.scannedCode
 
-    private val observer = Observer<String> { scannedData ->
-        try {
-            _scannedCode.value = scannedData
-        } catch (e: Exception) {
-            Log.e("SelectionMagasinViewModel", "Erreur de décodage des données scannées", e)
-            _errorMessage.value = "Erreur de décodage des données scannées : ${e.message}"
+    private val _enteredCode = MutableLiveData("")
+    val enteredCode: LiveData<String> = _enteredCode
+
+    init {
+        // Synchronise enteredCode avec scannedCode
+        viewModelScope.launch {
+            scannedCode.collect { newCode ->
+                _enteredCode.value = newCode
+            }
         }
     }
 
-
-    init {
-        scannerManager.registerReceiver()
-        scannerManager.scannedData.observeForever(observer)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        scannerManager.unregisterReceiver()
-        scannerManager.resetScannedData()
-        scannerManager.scannedData.removeObserver(observer)
-    }
-
     fun updateScannedCode(newCode: String) {
-        _scannedCode.value = newCode // Mettre à jour localement
+        _enteredCode.value = newCode // Mettre à jour localement
     }
 
     suspend fun handleQrCodeScan(qrCodeContent: String) {
