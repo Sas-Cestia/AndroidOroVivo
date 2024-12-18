@@ -50,8 +50,11 @@ class RFIDManager @Inject constructor(
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected
 
-    private val _scannedTags = MutableStateFlow<List<String>>(emptyList())
-    val scannedTags: StateFlow<List<String>> = _scannedTags
+    private val _scannedTags = MutableStateFlow<List<Pair<String, String>>>(emptyList())
+    val scannedTags: MutableStateFlow<List<Pair<String, String>>> = _scannedTags
+
+    private val _newTagScanned = MutableStateFlow<Pair<String, String>?>(null)
+    val newTagScanned: StateFlow<Pair<String, String>?> = _newTagScanned
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
@@ -248,21 +251,21 @@ class RFIDManager @Inject constructor(
                 var epc = ""
                 var tid = ""
                 for (tagKey in tagReadGroup.keys) {
-//                val tagValueList = tagReadGroup[tagKey]
-//
-//                for (tagData in tagValueList!!) {
-//                    if (tagData.opCode == ACCESS_OPERATION_CODE.ACCESS_OPERATION_READ) {
-//                        when (tagData.memoryBank.ordinal) {
-//                            MEMORY_BANK.MEMORY_BANK_EPC.ordinal -> epc =
-//                                getMemBankData(tagData.memoryBankData, tagData.opStatus)
-//
-//                            MEMORY_BANK.MEMORY_BANK_TID.ordinal -> tid =
-//                                getMemBankData(tagData.memoryBankData, tagData.opStatus)
-//                            //MEMORY_BANK.MEMORY_BANK_USER.ordinal -> usr = getMemBankData(tagData.memoryBankData, tagData.opStatus)
-//                        }
-//                    }
-//                }
-                    newTagRead(tagKey)
+                    val tagValueList = tagReadGroup[tagKey]
+
+                    for (tagData in tagValueList!!) {
+                        if (tagData.opCode == ACCESS_OPERATION_CODE.ACCESS_OPERATION_READ) {
+                            when (tagData.memoryBank.ordinal) {
+                                MEMORY_BANK.MEMORY_BANK_EPC.ordinal -> epc =
+                                    getMemBankData(tagData.memoryBankData, tagData.opStatus)
+
+                                MEMORY_BANK.MEMORY_BANK_TID.ordinal -> tid =
+                                    getMemBankData(tagData.memoryBankData, tagData.opStatus)
+                                //MEMORY_BANK.MEMORY_BANK_USER.ordinal -> usr = getMemBankData(tagData.memoryBankData, tagData.opStatus)
+                            }
+                        }
+                    }
+                    newTagRead(tagKey, tid)
                 }
             }
         }.start()
@@ -306,11 +309,14 @@ class RFIDManager @Inject constructor(
         _scannedTags.value = mutableListOf()
     }
 
-    override fun newTagRead(tag: String?) {
-        val decodedTag = tag?.decodeHex() ?: ""
+    override fun newTagRead(tag: String, idTag: String) {
+        val decodedTag = tag.decodeHex()
         Log.d(this.tag, "Tag lu: $decodedTag")
-        if (decodedTag.isNotEmpty() && !_scannedTags.value.contains(decodedTag)) {
-            _scannedTags.value = _scannedTags.value + (decodedTag)
+        val existingTags = _scannedTags.value.map { it.first }
+        val isExistingTag = existingTags.contains(decodedTag)
+        if (decodedTag.isNotEmpty() && !isExistingTag) {
+            _scannedTags.value = _scannedTags.value + Pair(decodedTag, idTag)
+//            _newTagScanned.value = Pair(decodedTag, idTag)
             Log.d(this.tag, "Tag ajouté: $decodedTag")
             Log.d(this.tag, "Liste des tags scannés: ${_scannedTags.value}")
         }

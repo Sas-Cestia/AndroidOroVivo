@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import fr.cestia.data.models.inventaire.InventaireEnCours
+import fr.cestia.data.models.inventaire.Saisie
 import fr.cestia.data.models.inventaire.StockInitial
 
 @Dao
@@ -28,4 +29,12 @@ interface InventaireDao {
     @Query("DELETE FROM minventaire_stock_ini")
     suspend fun deleteAllStockInitiaux()
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSaisie(saisie: Saisie)
+
+    @Query("SELECT * FROM minventaire_saisie")
+    suspend fun getAllSaisies(): List<Saisie>
+
+    @Query("DELETE FROM minventaire_saisie")
+    suspend fun deleteAllSaisies()
 }

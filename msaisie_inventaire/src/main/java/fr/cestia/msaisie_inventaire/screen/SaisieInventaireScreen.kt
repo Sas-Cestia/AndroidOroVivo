@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.SnackbarHostState
@@ -18,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import fr.cestia.common_files.R
@@ -41,6 +44,7 @@ fun SaisieInventaireScreen(
     val viewModel: SaisieInventaireViewModel = hiltViewModel()
     val state by viewModel.saisieInventaireState.observeAsState(SaisieInventaireState.Loading)
     val scannedTags by viewModel.scannedTags.observeAsState(emptyList<String>())
+    val tagsByVitrine by viewModel.scannedTagsByVitrine.observeAsState(emptyMap())
     val loadingMessage by viewModel.loadingMessage.observeAsState("")
     val errorMessage by viewModel.errorMessage.observeAsState("")
 
@@ -80,18 +84,6 @@ fun SaisieInventaireScreen(
                 }
 
                 Row {
-                    Text(text = "Tags RFID scannés :")
-                }
-
-                Row {
-                    LazyColumn {
-                        items(scannedTags) { tag ->
-                            Text(text = tag)
-                        }
-                    }
-                }
-
-                Row {
                     Column(
                         verticalArrangement = Arrangement.Bottom
                     ) {
@@ -121,6 +113,42 @@ fun SaisieInventaireScreen(
                         }
                     }
                 )
+            }
+
+            is SaisieInventaireState.Success -> {
+                Row {
+                    Text(text = "Total articles scannés: ${scannedTags.size}")
+                }
+
+                Row {
+                    LazyColumn {
+                        items(tagsByVitrine.entries.toList()) { (vitrine, count) ->
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Text(text = "Vitrine $vitrine : $count articles")
+                            }
+                        }
+                    }
+                }
+
+                Row {
+                    Column(
+                        verticalArrangement = Arrangement.Bottom
+                    ) {
+                        ExitButton(
+                            btnText = "Retour à l'accueil",
+                            icon = R.drawable.baseline_arrow_back_24
+                        ) {
+                            navController.navigate("accueil") {
+                                popUpTo("saisieInventaire") { inclusive = true }
+                            }
+                        }
+                    }
+                }
             }
 
             else -> {

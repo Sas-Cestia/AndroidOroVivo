@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,8 +13,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.cestia.common_files.bluetooth.IBluetoothHandler
 import fr.cestia.common_files.rfid.RFIDManager
+import fr.cestia.data.dao.inventaire.InventaireDao
+import fr.cestia.data.models.inventaire.Saisie
 import fr.cestia.msaisie_inventaire.state.SaisieInventaireState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +26,7 @@ class SaisieInventaireViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val bluetoothHandler: IBluetoothHandler,
     private val rfidManager: RFIDManager,
+    private val inventaireDao: InventaireDao
 ) : ViewModel() {
 
     // Liste des appareils appairés et découverts
@@ -34,18 +37,46 @@ class SaisieInventaireViewModel @Inject constructor(
     // État du lecteur RFID
     val isConnected = rfidManager.isConnected
 
-    val _scannedTags: MutableLiveData<List<String>> = MutableLiveData(emptyList())
-    val scannedTags: LiveData<List<String>> = _scannedTags
+    val _scannedTags: MutableLiveData<List<Pair<String, String>>> = MutableLiveData(emptyList())
+    val scannedTags: LiveData<List<Pair<String, String>>> = _scannedTags
+
+    val _newTagScanned: MutableLiveData<Pair<String, String?>?> = MutableLiveData(null)
+    val newTagScanned: LiveData<Pair<String, String?>?> = _newTagScanned
+
+    val _tagCount: MutableLiveData<Int> = MutableLiveData(0)
+    val tagCount: LiveData<Int> = _tagCount
+
+    val _listVitrine: MutableLiveData<List<String>> = MutableLiveData(emptyList())
+    val listVitrine: LiveData<List<String>> = _listVitrine
+
+    val _scannedTagsByVitrine: MediatorLiveData<Map<String, Int>> = MediatorLiveData()
+    val scannedTagsByVitrine: LiveData<Map<String, Int>> = _scannedTagsByVitrine
 
     val rfidErrorMessage = rfidManager.errorMessage
 
     init {
         viewModelScope.launch {
             rfidManager.scannedTags.collect { tagList ->
-                _scannedTags.value = tagList
+                handleNewTagScanned(tagList)
                 Log.d("SaisieInventaireViewModel", "Scanned tags: ${_scannedTags.value}")
             }
+
         }
+        viewModelScope.launch {
+            _scannedTagsByVitrine.addSource(scannedTags) { tags ->
+                _scannedTagsByVitrine.value = tags.groupBy { tag ->
+                    tag.first.substring(10) // Extraire le code vitrine
+                }.mapValues { (_, tagList) ->
+                    tagList.size // Compter les tags pour chaque vitrine
+                }
+            }
+        }
+//        viewModelScope.launch {
+//            rfidManager.newTagScanned.collect { tagPair ->
+//                handleNewTagScanned(tagPair)
+//                Log.d("SaisieInventaireViewModel", "New tag scanned: $tagPair")
+//            }
+//        }
     }
 
     private val _saisieInventaireState =
@@ -86,23 +117,21 @@ class SaisieInventaireViewModel @Inject constructor(
     }
 
     fun connectToReader(device: BluetoothDevice) {
-        viewModelScope.launch {
+
             rfidManager.connectToDevice(device)
-        }
+
     }
 
     fun clearScannedTags() {
         rfidManager.clearTags()
     }
 
-    suspend fun initialize() {
-        _saisieInventaireState.value = SaisieInventaireState.Loading
+    fun initialize() {
+
 
         bluetoothHandler.initialize()
 
-        _loadingMessage.value = "Recherche des lecteurs disponibles..."
-
-        // Étape 1 : Vérification de l'état du Bluetooth
+        // Vérification de l'état du Bluetooth
         if (!bluetoothHandler.isBluetoothEnabled()) {
             _alertMessage.value = "Le Bluetooth n'est pas activé. Voulez-vous l'activer ?"
             val isActivated = bluetoothHandler.requestEnableBluetooth(context)
@@ -112,11 +141,6 @@ class SaisieInventaireViewModel @Inject constructor(
                 return
             }
         }
-
-        // Étape 2 : Recherche des appareils disponibles
-        bluetoothHandler.startDiscovery()
-        delay(5000) // Attendre que la découverte termine (ou utilisez un écouteur)
-        bluetoothHandler.stopDiscovery()
 
         val allDevices =
             bluetoothHandler.pairedDevices.value + bluetoothHandler.discoveredDevices.value
@@ -132,10 +156,12 @@ class SaisieInventaireViewModel @Inject constructor(
             }
 
             filteredDevices.size == 1 -> {
-                // Étape 3 : Connexion automatique si un seul appareil
+                // Connexion automatique si un seul appareil
                 val device = filteredDevices.first()
+
                 connectToReader(device)
                 _saisieInventaireState.value = SaisieInventaireState.Initial
+
             }
 
             filteredDevices.size > 1 -> {
@@ -147,7 +173,48 @@ class SaisieInventaireViewModel @Inject constructor(
         _loadingMessage.value = ""
     }
 
+    suspend fun handleNewTagScanned(tagList: List<Pair<String, String>>) {
+        _scannedTags.value = tagList
+        if (tagList.isNotEmpty()) {
+            tagList.forEach { tagPair ->
+
+                try {
+                    val (tag, tid) = tagPair
+                    val codeArticle = "00" + tag.substring(0, 8)
+                    val quantite = 1
+                    val codeVitrine = tag.substring(10)
+                    val codeMatiere = tag.substring(8, 9)
+                    val codeFamille = tag.substring(9, 10)
+                    val idRfid = tid
+                    val saisie = Saisie(
+                        idRfid = idRfid,
+                        codeArticle = codeArticle,
+                        quantite = quantite.toFloat(),
+                        codeVitrine = codeVitrine,
+                        codeMatiere = "A",
+                        codeFamille = codeFamille
+                    )
+                    inventaireDao.insertSaisie(saisie)
+                    if (_listVitrine.value != null && !_listVitrine.value?.contains(codeVitrine)!!) {
+                        _listVitrine.value = _listVitrine.value?.plus(codeVitrine)
+                    }
+
+                    _saisieInventaireState.value = SaisieInventaireState.Success
+
+                } catch (e: Exception) {
+                    Log.e("SaisieInventaireViewModel", "Erreur lors de la saisie de l'article", e)
+                    _errorMessage.value = "Erreur lors de la saisie de l'article"
+                    _saisieInventaireState.value = SaisieInventaireState.Error
+                }
+
+            }
+        }
+
+    }
+
     init {
+        _loadingMessage.value = "Recherche des lecteurs disponibles..."
+        _saisieInventaireState.value = SaisieInventaireState.Loading
         viewModelScope.launch {
             initialize()
         }
@@ -166,8 +233,9 @@ class SaisieInventaireViewModel @Inject constructor(
         super.onCleared()
         // Libérer les ressources si nécessaire
         viewModelScope.launch {
-            bluetoothHandler.stopDiscovery()
+            bluetoothHandler.cleanup()
             rfidManager.disconnect()
+            rfidManager.clearTags()
         }
     }
 }

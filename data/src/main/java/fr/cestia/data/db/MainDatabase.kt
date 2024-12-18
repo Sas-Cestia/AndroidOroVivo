@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import fr.cestia.data.dao.MainDao
 import fr.cestia.data.dao.inventaire.InventaireDao
 import fr.cestia.data.dao.produit.ProduitDao
 import fr.cestia.data.models.inventaire.InventaireEnCours
@@ -27,7 +26,6 @@ import fr.cestia.data.models.produit.Matiere
     exportSchema = false
 )
 abstract class MainDatabase : RoomDatabase() {
-    abstract fun sinexDao(): MainDao
     abstract fun produitDao(): ProduitDao
     abstract fun inventaireDao(): InventaireDao
 

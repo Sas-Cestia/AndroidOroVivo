@@ -37,6 +37,7 @@ class MainApplication : Application(), CoroutineScope {
     suspend fun endApp() {
         inventaireDao.deleteAllInventairesEnCours()
         inventaireDao.deleteAllStockInitiaux()
+        inventaireDao.deleteAllSaisies()
         dwManager.unregisterDWReceiver()
         coroutineContext.cancel()
     }
