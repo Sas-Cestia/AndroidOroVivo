@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 data class InventaireEnCours (
     @PrimaryKey @ColumnInfo(name = "id") val id:Int = 0,
     @ColumnInfo(name = "code_magasin") var codeMagasin: String,
+    @ColumnInfo(name = "code_inventaire") var codeInventaire: String,
     @ColumnInfo(name = "date_ouverture") var dateOuverture: String
 ) {
     companion object {

@@ -12,7 +12,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.cestia.common_files.bluetooth.IBluetoothHandler
 import fr.cestia.common_files.rfid.RFIDManager
-import fr.cestia.data.dao.MainDao
 import fr.cestia.msaisie_inventaire.state.SaisieInventaireState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -23,9 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SaisieInventaireViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val mainDao: MainDao,
     private val bluetoothHandler: IBluetoothHandler,
-    private val rfidManager: RFIDManager
+    private val rfidManager: RFIDManager,
 ) : ViewModel() {
 
     // Liste des appareils appairés et découverts

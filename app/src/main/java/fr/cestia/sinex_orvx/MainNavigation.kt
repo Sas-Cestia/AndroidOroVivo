@@ -12,11 +12,11 @@ import fr.cestia.common_files.screens.LoadingScreen
 import fr.cestia.msaisie_inventaire.screen.SaisieInventaireScreen
 import fr.cestia.sinex_orvx.screen.AccueilScreen
 import fr.cestia.sinex_orvx.screen.SelectionMagasinScreen
-import fr.cestia.sinex_orvx.viewmodel.AppInitializationViewModel
+import fr.cestia.sinex_orvx.viewmodel.AppInitializerViewModel
 
 @Composable
 fun MainNavGraph(navController: NavHostController, startDestination: String = "loading") {
-    val appInitializationViewModel: AppInitializationViewModel = hiltViewModel()
+    val appInitializerViewModel: AppInitializerViewModel = hiltViewModel()
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable("loading") { LoadingScreen() }
@@ -39,7 +39,7 @@ fun MainNavGraph(navController: NavHostController, startDestination: String = "l
                 ErrorScreen(
                     message = errorMessage.toString(),
                     displayRetryButton = true,
-                    actionOnRetry = { appInitializationViewModel.retryInitialization() })
+                    actionOnRetry = { appInitializerViewModel.retryInitialization() })
             } else {
                 ErrorScreen(message = errorMessage.toString())
             }

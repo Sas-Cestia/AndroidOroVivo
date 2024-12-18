@@ -1,8 +1,10 @@
 package fr.cestia.data.webservices
 
 import android.util.Log
+import fr.cestia.data.models.inventaire.QteInventaireVitrine
 import fr.cestia.data.models.produit.Famille
 import fr.cestia.data.models.produit.Matiere
+import fr.cestia.data.webservices.requests.ChargerQteInventaireVitrine
 import fr.cestia.data.webservices.requests.ChargerRayonFamille
 import fr.cestia.data.webservices.soapservice.SoapService
 import org.jsoup.Jsoup
@@ -11,7 +13,9 @@ import org.xml.sax.InputSource
 import java.io.StringReader
 import javax.xml.parsers.DocumentBuilderFactory
 
-class RemoteDataSourceImpl(private val soapService: SoapService) : RemoteDataSource {
+class RemoteDataSourceImpl(
+    private val soapService: SoapService,
+) : RemoteDataSource {
 
     // Fonction pour extraire la faultstring à partir de la réponse SOAP
     private fun getFaultString(soapResponse: String): String? {
@@ -84,5 +88,64 @@ class RemoteDataSourceImpl(private val soapService: SoapService) : RemoteDataSou
         }
 
         return Pair(matieres, familles)
+    }
+
+    override suspend fun fetchQteInventaireVitrine(codeMagasin: String): List<QteInventaireVitrine> {
+
+        // Génère l'enveloppe SOAP
+        val request = ChargerQteInventaireVitrine(codeMagasin).buildRequest()
+
+        // Appelle le webservice
+        val response = soapService.chargerQteInventaireVitrine(request)
+
+        if (response.isSuccessful) {
+            val responseBody = response.body()
+                ?: throw Exception("La réponse du webservice ChargerQteInventaireVitrine est vide")
+            return parseChargerQteInventaireVitrineResponse(responseBody)
+        } else {
+            val soapErrorResponse = response.errorBody()?.string()
+            var faultString: String? = null
+
+            soapErrorResponse?.let {
+                faultString = getFaultString(it)
+            }
+
+            if (!faultString.isNullOrBlank()) {
+                Log.d("fetchQteInventaireVitrine", faultString)
+                throw Exception(faultString)
+            } else {
+                throw Exception("Erreur HTTP: ${response.code()}")
+            }
+        }
+    }
+
+    private fun parseChargerQteInventaireVitrineResponse(response: String): List<QteInventaireVitrine> {
+        val qteInventaireVitrineList = mutableListOf<QteInventaireVitrine>()
+
+        val document = Jsoup.parse(response)
+
+        val qteInventaireVitrineElements =
+            document.select("QteInventVitrine")
+        qteInventaireVitrineElements.forEach { qteInventaireVitrineElement ->
+            val codeInventaire =
+                qteInventaireVitrineElement.selectFirst("CodeInventaire")?.text() ?: ""
+            val codeVitrine = qteInventaireVitrineElement.selectFirst("CodeVitrine")?.text() ?: ""
+            val libVitrine =
+                qteInventaireVitrineElement.selectFirst("LibVitrine")?.text() ?: ""
+            val qte =
+                qteInventaireVitrineElement.selectFirst("Qte")?.text()?.toFloat() ?: 0.toFloat()
+            val qteConfie = qteInventaireVitrineElement.selectFirst("QteConfie")?.text()?.toFloat()
+                ?: 0.toFloat()
+            qteInventaireVitrineList.add(
+                QteInventaireVitrine(
+                    codeInventaire,
+                    codeVitrine,
+                    libVitrine,
+                    qte,
+                    qteConfie
+                )
+            )
+        }
+        return qteInventaireVitrineList
     }
 }

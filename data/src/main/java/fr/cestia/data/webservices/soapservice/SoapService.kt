@@ -12,4 +12,12 @@ interface SoapService {
     )
     @POST("WebServiceORV0.asmx") // Endpoint du webservice SOAP
     suspend fun chargerRayonFamille(@Body body: String): Response<String>
+
+    @Headers(
+        "Content-Type: text/xml; charset=utf-8",
+        "SOAPAction: http://tempuri.org/ChargerQteInventaireVitrine"
+    )
+    @POST("WebServiceORV0.asmx") // Endpoint du webservice SOAP
+    suspend fun chargerQteInventaireVitrine(@Body body: String): Response<String>
+
 }

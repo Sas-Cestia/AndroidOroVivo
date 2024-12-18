@@ -19,7 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import fr.cestia.common_files.bluetooth.BluetoothHandler
 import fr.cestia.common_files.ui.theme.SinexTheme
-import fr.cestia.sinex_orvx.viewmodel.AppInitializationViewModel
+import fr.cestia.sinex_orvx.viewmodel.AppInitializerViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,13 +42,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             mainApplication = application as MainApplication
-            val appInitializationViewModel: AppInitializationViewModel = hiltViewModel()
+            val appInitializerViewModel: AppInitializerViewModel = hiltViewModel()
             SinexTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    mainApplication.App(appInitializationViewModel)
+                    mainApplication.App(appInitializerViewModel)
                 }
             }
         }

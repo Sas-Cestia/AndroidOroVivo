@@ -1,15 +1,12 @@
 package fr.cestia.sinex_orvx.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import fr.cestia.data.models.produit.MatieresFamilles
 import fr.cestia.data.repositories.produit.ProduitRepository
 import fr.cestia.sinex_orvx.AppInitializer
-import fr.cestia.sinex_orvx.state.AppInitializedState
+import fr.cestia.sinex_orvx.state.AppInitializerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,16 +14,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AppInitializationViewModel @Inject constructor(
+class AppInitializerViewModel @Inject constructor(
     private val appInitializer: AppInitializer,
-    private val produitRepository: ProduitRepository
+    private val produitRepository: ProduitRepository,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(AppInitializedState())
-    val state: StateFlow<AppInitializedState> = _state.asStateFlow()
-
-    private val _matieresFamilles = MutableLiveData<MatieresFamilles>()
-    val matieresFamilles: LiveData<MatieresFamilles> get() = _matieresFamilles
+    private val _state = MutableStateFlow(AppInitializerState())
+    val state: StateFlow<AppInitializerState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -37,7 +31,6 @@ class AppInitializationViewModel @Inject constructor(
     private suspend fun performInitialization() {
         var isDatawedgeInitialized = false
         var isMatieresFamillesLoaded = false
-        var isExistingInventaire = false
 
 
         // Lancer des coroutines pour chaque tâche
@@ -47,23 +40,18 @@ class AppInitializationViewModel @Inject constructor(
         val matieresFamillesJob = viewModelScope.launch {
             isMatieresFamillesLoaded = syncMatieresFamilles()
         }
-        val inventaireJob = viewModelScope.launch {
-            isExistingInventaire = appInitializer.hasExistingInventaire()
-        }
 
         // Attendre la fin des coroutines
         dataWedgeJob.join()
         matieresFamillesJob.join()
-        inventaireJob.join()
 
         if (isDatawedgeInitialized && isMatieresFamillesLoaded) {
             Log.d("AppInitialization", "Application initialisée avec succès")
             // Retourner l'état mis à jour
-            _state.value = AppInitializedState(
+            _state.value = AppInitializerState(
                 isLoading = false,
                 isDatawedgeInitialized = isDatawedgeInitialized,
                 isMatieresFamillesLoaded = isMatieresFamillesLoaded,
-                isExistingInventaire = isExistingInventaire
             )
         }
     }
@@ -106,9 +94,7 @@ class AppInitializationViewModel @Inject constructor(
     fun loadMatieresFamilles() {
         viewModelScope.launch {
             try {
-                val data = produitRepository.getMatieresFamilles()
-                _matieresFamilles.value = data
-
+                produitRepository.getMatieresFamilles()
             } catch (e: Exception) {
                 val errorMessage =
                     e.message
@@ -129,8 +115,7 @@ class AppInitializationViewModel @Inject constructor(
         var responseIsSuccessful = false
         try {
             responseIsSuccessful = produitRepository.syncMatieresFamilles()
-            loadMatieresFamilles()
-            Log.d("AppInitialization", "Matières et familles chargées")
+            Log.d("AppInitialization", "Matières et familles synchronisées")
         } catch (e: Exception) {
             val errorMessage = if (e.message != null) {
                 "Erreur de chargement des matières et familles:\n" + e.message!!

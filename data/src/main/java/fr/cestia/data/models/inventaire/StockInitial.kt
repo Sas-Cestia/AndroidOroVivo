@@ -8,6 +8,7 @@ import androidx.room.PrimaryKey
 data class StockInitial (
     @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "id") val id:Int = 0,
     @ColumnInfo(name = "code_vitrine") var codeVitrine: String,
+    @ColumnInfo(name = "lib_vitrine") var libVitrine: String?,
     @ColumnInfo(name = "quantite") var quantite: Float
 ) {
     companion object {

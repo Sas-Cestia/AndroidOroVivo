@@ -37,6 +37,8 @@ import fr.cestia.common_files.components.BaseTopAppBar
 import fr.cestia.common_files.components.ErrorSnackBar
 import fr.cestia.common_files.components.ExitButton
 import fr.cestia.common_files.screens.BaseScreen
+import fr.cestia.common_files.screens.ErrorScreen
+import fr.cestia.common_files.screens.LoadingScreen
 import fr.cestia.common_files.tools.exitApplication
 import fr.cestia.common_files.tools.scan.ScanSoundManager
 import fr.cestia.common_files.ui.theme.Typography
@@ -73,113 +75,131 @@ fun SelectionMagasinScreen(
         }
     }
 
-    BaseScreen(
-        topBar = { BaseTopAppBar() },
-        snackbarHostState = snackbarHostState,
-        verticalArrangement = Arrangement.SpaceBetween,
-    ) {
-
-        LaunchedEffect(selectionMagasinState) {
-            if (selectionMagasinState is SelectionMagasinState.Success) {
-                navController.navigate("accueil") {
-                    // Clear backstack pour éviter de retourner à l'écran de chargement
-                    popUpTo("selectionMagasin") { inclusive = true }
-                }
-            }
-        }
-
-        LaunchedEffect(errorMessage) {
-            if (errorMessage.isNotEmpty()) {
-                snackbarHostState.showSnackbar(errorMessage)
-            }
-        }
-
-        Column {
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    horizontalAlignment = Alignment.CenterHorizontally
-
-                ) {
-                    Text(
-                        stringResource(R.string.bonjour) + ".\n" +
-                                stringResource(R.string.selection_magasin),
-                        style = Typography.titleMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    TextField(
-                        value = enteredCode,
-                        onValueChange = { newValue ->
-
-                            // Mettre à jour scannedCode si nécessaire via le ViewModel
-                            scope.launch {
-                                viewModel.updateScannedCode(newValue)
-                            }
-
-                        },
-                        singleLine = true,
-                        label = {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .align(Alignment.CenterHorizontally)
-                            ) {
-                                Text(
-                                    stringResource(R.string.scan_qr_code),
-                                    modifier = Modifier.align(Alignment.Center),
-                                    style = Typography.labelMedium
-                                )
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Done,
-                            autoCorrectEnabled = false,
-                            keyboardType = KeyboardType.Number
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = {
-                                keyboardController?.hide()
-                                val currentCode = enteredCode
-                                scope.launch {
-                                    if (currentCode.isNotEmpty()) {
-                                        viewModel.handleQrCodeScan(currentCode)
-                                    }
-                                }
-
-                            }
-                        ),
-                        textStyle = Typography.titleLarge,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    )
-                }
-
-                Box()
-                {
-                    ErrorSnackBar(
-                        errorSnackBarHostState,
-                        Modifier.align(Alignment.BottomCenter)
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.Bottom
-                ) {
-                    ExitButton { exitApplication(context) }
-                }
+    LaunchedEffect(selectionMagasinState) {
+        if (selectionMagasinState is SelectionMagasinState.Success) {
+            navController.navigate("accueil") {
+                // Clear backstack pour éviter de retourner à l'écran de chargement
+                popUpTo("selectionMagasin") { inclusive = true }
             }
         }
     }
+
+//    LaunchedEffect(errorMessage) {
+//        if (errorMessage.isNotEmpty()) {
+//            snackbarHostState.showSnackbar(errorMessage)
+//        }
+//    }
+
+    when (selectionMagasinState) {
+        is SelectionMagasinState.Loading -> {
+            LoadingScreen()
+        }
+
+        is SelectionMagasinState.Error -> {
+            ErrorScreen(errorMessage)
+        }
+
+        is SelectionMagasinState.Initial -> {
+            BaseScreen(
+                topBar = { BaseTopAppBar() },
+                snackbarHostState = snackbarHostState,
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+
+
+                Column {
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.SpaceBetween,
+                            horizontalAlignment = Alignment.CenterHorizontally
+
+                        ) {
+                            Text(
+                                stringResource(R.string.bonjour) + ".\n" +
+                                        stringResource(R.string.selection_magasin),
+                                style = Typography.titleMedium
+                            )
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            TextField(
+                                value = enteredCode,
+                                onValueChange = { newValue ->
+
+                                    // Mettre à jour scannedCode si nécessaire via le ViewModel
+                                    scope.launch {
+                                        viewModel.updateScannedCode(newValue)
+                                    }
+
+                                },
+                                singleLine = true,
+                                label = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .align(Alignment.CenterHorizontally)
+                                    ) {
+                                        Text(
+                                            stringResource(R.string.scan_qr_code),
+                                            modifier = Modifier.align(Alignment.Center),
+                                            style = Typography.labelMedium
+                                        )
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Done,
+                                    autoCorrectEnabled = false,
+                                    keyboardType = KeyboardType.Number
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = {
+                                        keyboardController?.hide()
+                                        val currentCode = enteredCode
+                                        scope.launch {
+                                            if (currentCode.isNotEmpty()) {
+                                                viewModel.handleQrCodeScan(currentCode)
+                                            }
+                                        }
+
+                                    }
+                                ),
+                                textStyle = Typography.titleLarge,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                            )
+                        }
+
+                        Box()
+                        {
+                            ErrorSnackBar(
+                                errorSnackBarHostState,
+                                Modifier.align(Alignment.BottomCenter)
+                            )
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.Bottom
+                        ) {
+                            ExitButton { exitApplication(context) }
+                        }
+                    }
+                }
+            }
+        }
+
+        else -> {
+
+        }
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

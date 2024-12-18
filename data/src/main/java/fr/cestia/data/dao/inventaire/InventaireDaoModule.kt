@@ -1,4 +1,4 @@
-package fr.cestia.data.dao.produit
+package fr.cestia.data.dao.inventaire
 
 import dagger.Module
 import dagger.Provides
@@ -9,10 +9,10 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ProduitDaoModule {
+object InventaireDaoModule {
     @Provides
     @Singleton
-    fun provideProduitDao(database: MainDatabase): ProduitDao {
-        return database.produitDao()
+    fun provideInventaireDao(database: MainDatabase): InventaireDao {
+        return database.inventaireDao()
     }
 }

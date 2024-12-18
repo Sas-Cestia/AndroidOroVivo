@@ -7,16 +7,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import fr.cestia.common_files.barcode.DWManager
-import fr.cestia.data.dao.MainDao
-import fr.cestia.data.models.inventaire.InventaireEnCours
+import fr.cestia.data.repositories.inventaire.InventaireRepository
 import fr.cestia.sinex_orvx.state.SelectionMagasinState
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SelectionMagasinViewModel @Inject constructor(
-    private val mainDao: MainDao,
-    private val dwManager: DWManager,
+    dwManager: DWManager,
+    private val inventaireRepository: InventaireRepository
+
 ) : ViewModel() {
     private val _selectionMagasinState =
         MutableLiveData<SelectionMagasinState>(SelectionMagasinState.Initial)
@@ -48,13 +48,7 @@ class SelectionMagasinViewModel @Inject constructor(
         _selectionMagasinState.value = SelectionMagasinState.Loading
 
         try {
-            // TODO: Appeler webservice pour récupérer date d'ouverture
-            if (qrCodeContent != "042") {
-                throw Exception("Code QR invalide")
-            }
-            mainDao.insertInventaireEnCours(
-                InventaireEnCours(id = 0, codeMagasin = qrCodeContent, dateOuverture = "2024-11-06")
-            )
+            syncInventaireEnCours(qrCodeContent)
             _selectionMagasinState.value = SelectionMagasinState.Success
         } catch (e: Exception) {
             Log.e("SelectionMagasinViewModel", "Erreur lors de la sélection du magasin", e)
@@ -62,4 +56,30 @@ class SelectionMagasinViewModel @Inject constructor(
             _selectionMagasinState.value = SelectionMagasinState.Error
         }
     }
+
+
+    suspend fun syncInventaireEnCours(codeMagasin: String): Boolean {
+        var responseIsSuccessful = false
+        try {
+            responseIsSuccessful =
+                inventaireRepository.syncInventaireEnCours(codeMagasin = codeMagasin)
+            Log.d("AppInitialization", "Inventaire en cours synchronisé")
+        } catch (e: Exception) {
+            val errorMessage = if (e.message != null) {
+                "Erreur lors de la récupération de l'inventaire en cours:\n" + e.message!!
+            } else {
+                "Erreur inconnue lors de la récupération de l'inventaire en cours depuis le webservice. "
+            }
+
+            Log.e(
+                "SaisieInventaireViewModel",
+                errorMessage,
+                e
+            )
+            _errorMessage.value = errorMessage
+            _selectionMagasinState.value = SelectionMagasinState.Error
+        }
+        return responseIsSuccessful
+    }
+
 }
